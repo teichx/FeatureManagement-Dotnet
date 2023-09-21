@@ -32,8 +32,6 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         /// <returns>True if the feature is enabled, false otherwise.</returns>
         public virtual Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<ITimeWindowFilterSettings> context)
         {
-            //
-            // Check if prebound settings available, otherwise bind from parameters.
             var start = context.Parameters.Start;
             var end = context.Parameters.End;
 

@@ -593,7 +593,7 @@ namespace Tests.FeatureManagement
             var testFeature = new FeatureDefinition<IConfiguration>
             {
                 Name = ConditionalFeature,
-                EnabledFor = new List<FeatureFilterEnabledFor<IConfiguration>>()
+                EnabledFor = new List<IFeatureFilterEnabledFor<IConfiguration>>()
                 {
                     new FeatureFilterEnabledFor<IConfiguration>
                     {
@@ -891,7 +891,7 @@ namespace Tests.FeatureManagement
                     new FeatureDefinition<IConfiguration>
                     {
                         Name = ConditionalFeature,
-                        EnabledFor = new List<FeatureFilterEnabledFor<IConfiguration>>()
+                        EnabledFor = new List<IFeatureFilterEnabledFor<IConfiguration>>()
                         {
                             testFilterConfiguration
                         }

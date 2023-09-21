@@ -18,7 +18,7 @@ namespace Microsoft.FeatureManagement
         /// <summary>
         /// The feature filters that the feature can be enabled for.
         /// </summary>
-        public IEnumerable<FeatureFilterEnabledFor<TParameters>> EnabledFor { get; }
+        public IEnumerable<IFeatureFilterEnabledFor<TParameters>> EnabledFor { get; }
 
         /// <summary>
         /// Determines whether any or all registered feature filters must be enabled for the feature to be considered enabled
