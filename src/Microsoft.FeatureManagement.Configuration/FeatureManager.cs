@@ -5,13 +5,14 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.FeatureManagement.FeatureFilters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.FeatureManagement
+namespace Microsoft.FeatureManagement.Configuration
 {
     /// <summary>
     /// Used to evaluate whether a feature is enabled or disabled.
@@ -21,15 +22,15 @@ namespace Microsoft.FeatureManagement
         private readonly TimeSpan ParametersCacheSlidingExpiration = TimeSpan.FromMinutes(5);
         private readonly TimeSpan ParametersCacheAbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1);
 
-        private readonly IFeatureDefinitionProvider _featureDefinitionProvider;
+        private readonly IFeatureDefinitionProvider<IConfiguration> _featureDefinitionProvider;
         private readonly IEnumerable<IFeatureFilterMetadata> _featureFilters;
         private readonly IEnumerable<ISessionManager> _sessionManagers;
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, IFeatureFilterMetadata> _filterMetadataCache;
-        private readonly ConcurrentDictionary<string, ContextualFeatureFilterEvaluator> _contextualFeatureFilterCache;
+        private readonly ConcurrentDictionary<string, ContextualFeatureFilterEvaluator<IConfiguration>> _contextualFeatureFilterCache;
         private readonly FeatureManagementOptions _options;
         private readonly IMemoryCache _parametersCache;
-        
+
         private class ConfigurationCacheItem
         {
             public IConfiguration Parameters { get; set; }
@@ -38,7 +39,7 @@ namespace Microsoft.FeatureManagement
         }
 
         public FeatureManager(
-            IFeatureDefinitionProvider featureDefinitionProvider,
+            IFeatureDefinitionProvider<IConfiguration> featureDefinitionProvider,
             IEnumerable<IFeatureFilterMetadata> featureFilters,
             IEnumerable<ISessionManager> sessionManagers,
             ILoggerFactory loggerFactory,
@@ -49,7 +50,7 @@ namespace Microsoft.FeatureManagement
             _sessionManagers = sessionManagers ?? throw new ArgumentNullException(nameof(sessionManagers));
             _logger = loggerFactory.CreateLogger<FeatureManager>();
             _filterMetadataCache = new ConcurrentDictionary<string, IFeatureFilterMetadata>();
-            _contextualFeatureFilterCache = new ConcurrentDictionary<string, ContextualFeatureFilterEvaluator>();
+            _contextualFeatureFilterCache = new ConcurrentDictionary<string, ContextualFeatureFilterEvaluator<IConfiguration>>();
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
             _parametersCache = new MemoryCache(new MemoryCacheOptions());
         }
@@ -66,7 +67,7 @@ namespace Microsoft.FeatureManagement
 
         public async IAsyncEnumerable<string> GetFeatureNamesAsync()
         {
-            await foreach (FeatureDefinition featureDefintion in _featureDefinitionProvider.GetAllFeatureDefinitionsAsync().ConfigureAwait(false))
+            await foreach (var featureDefintion in _featureDefinitionProvider.GetAllFeatureDefinitionsAsync().ConfigureAwait(false))
             {
                 yield return featureDefintion.Name;
             }
@@ -91,14 +92,14 @@ namespace Microsoft.FeatureManagement
 
             bool enabled;
 
-            FeatureDefinition featureDefinition = await _featureDefinitionProvider.GetFeatureDefinitionAsync(feature).ConfigureAwait(false);
+            var featureDefinition = await _featureDefinitionProvider.GetFeatureDefinitionAsync(feature).ConfigureAwait(false);
 
             if (featureDefinition != null)
             {
                 if (featureDefinition.RequirementType == RequirementType.All && _options.IgnoreMissingFeatureFilters)
                 {
                     throw new FeatureManagementException(
-                        FeatureManagementError.Conflict, 
+                        FeatureManagementError.Conflict,
                         $"The 'IgnoreMissingFeatureFilters' flag cannot use used in combination with a feature of requirement type 'All'.");
                 }
 
@@ -124,7 +125,7 @@ namespace Microsoft.FeatureManagement
 
                     //
                     // For all enabling filters listed in the feature's state, evaluate them according to requirement type
-                    foreach (FeatureFilterConfiguration featureFilterConfiguration in featureDefinition.EnabledFor)
+                    foreach (var featureFilterConfiguration in featureDefinition.EnabledFor)
                     {
                         filterIndex++;
 
@@ -137,7 +138,7 @@ namespace Microsoft.FeatureManagement
                                 enabled = true;
                                 break;
                             }
-                            
+
                             continue;
                         }
 
@@ -157,7 +158,7 @@ namespace Microsoft.FeatureManagement
                             continue;
                         }
 
-                        var context = new FeatureFilterEvaluationContext()
+                        var context = new FeatureFilterEvaluationContext<IConfiguration>()
                         {
                             FeatureName = feature,
                             Parameters = featureFilterConfiguration.Parameters
@@ -167,7 +168,7 @@ namespace Microsoft.FeatureManagement
                         // IContextualFeatureFilter
                         if (useAppContext)
                         {
-                            ContextualFeatureFilterEvaluator contextualFilter = GetContextualFeatureFilter(featureFilterConfiguration.Name, typeof(TContext));
+                            var contextualFilter = GetContextualFeatureFilter(featureFilterConfiguration.Name, typeof(TContext));
 
                             BindSettings(filter, context, filterIndex);
 
@@ -182,11 +183,29 @@ namespace Microsoft.FeatureManagement
 
                         //
                         // IFeatureFilter
-                        if (filter is IFeatureFilter featureFilter)
+                        //var heritageFromIConfiguration = filter.GetType().GetInterfaces()
+                        //    .SelectMany(x => x.GenericTypeArguments)
+                        //    .SelectMany(x => x.GetInterfaces())
+                        //    .Any(x => x == typeof(IConfiguration))
+                        //    ;
+                        // if (filter is IFeatureFilter<IConfiguration> featureFilter)
+                        // if (filter is IFeatureFilter<IConfiguration> currentFilter)
+                        // {
+                        //     BindSettings(filter, context, filterIndex);
+
+                        //     if (await currentFilter.EvaluateAsync(context).ConfigureAwait(false) == targetEvaluation)
+                        //     {
+                        //         enabled = targetEvaluation;
+
+                        //         break;
+                        //     }
+                        // }
+                        if (filter is IFeatureFilter<IConfiguration> featureFilter)
                         {
                             BindSettings(filter, context, filterIndex);
 
-                            if (await featureFilter.EvaluateAsync(context).ConfigureAwait(false) == targetEvaluation) {
+                            if (await featureFilter.EvaluateAsync(context).ConfigureAwait(false) == targetEvaluation)
+                            {
                                 enabled = targetEvaluation;
 
                                 break;
@@ -205,7 +224,7 @@ namespace Microsoft.FeatureManagement
                 {
                     throw new FeatureManagementException(FeatureManagementError.MissingFeature, errorMessage);
                 }
-                
+
                 _logger.LogWarning(errorMessage);
             }
 
@@ -217,9 +236,9 @@ namespace Microsoft.FeatureManagement
             return enabled;
         }
 
-        private void BindSettings(IFeatureFilterMetadata filter, FeatureFilterEvaluationContext context, int filterIndex)
+        private void BindSettings(IFeatureFilterMetadata filter, IFeatureFilterEvaluationContext<IConfiguration> context, int filterIndex)
         {
-            IFilterParametersBinder binder = filter as IFilterParametersBinder;
+            var binder = filter as IFilterParametersBinder;
 
             if (binder == null)
             {
@@ -241,8 +260,7 @@ namespace Microsoft.FeatureManagement
 
             //
             // Check if settings already bound from configuration or the parameters have changed
-            if (!_parametersCache.TryGetValue(cacheKey, out cacheItem) ||
-                cacheItem.Parameters != context.Parameters)
+            if (!_parametersCache.TryGetValue(cacheKey, out cacheItem))
             {
                 settings = binder.BindParameters(context.Parameters);
 
@@ -273,7 +291,8 @@ namespace Microsoft.FeatureManagement
 
             IFeatureFilterMetadata filter = _filterMetadataCache.GetOrAdd(
                 filterName,
-                (_) => {
+                (_) =>
+                {
 
                     IEnumerable<IFeatureFilterMetadata> matchingFilters = _featureFilters.Where(f =>
                     {
@@ -318,21 +337,22 @@ namespace Microsoft.FeatureManagement
             return filter;
         }
 
-        private ContextualFeatureFilterEvaluator GetContextualFeatureFilter(string filterName, Type appContextType)
+        private ContextualFeatureFilterEvaluator<IConfiguration> GetContextualFeatureFilter(string filterName, Type appContextType)
         {
             if (appContextType == null)
             {
                 throw new ArgumentNullException(nameof(appContextType));
             }
 
-            ContextualFeatureFilterEvaluator filter = _contextualFeatureFilterCache.GetOrAdd(
+            var filter = _contextualFeatureFilterCache.GetOrAdd(
                 $"{filterName}{Environment.NewLine}{appContextType.FullName}",
-                (_) => {
+                (_) =>
+                {
 
                     IFeatureFilterMetadata metadata = GetFeatureFilterMetadata(filterName);
 
-                    return ContextualFeatureFilterEvaluator.IsContextualFilter(metadata, appContextType) ?
-                        new ContextualFeatureFilterEvaluator(metadata, appContextType) :
+                    return ContextualFeatureFilterEvaluator<IConfiguration>.IsContextualFilter(metadata, appContextType) ?
+                        new ContextualFeatureFilterEvaluator<IConfiguration>(metadata, appContextType) :
                         null;
                 }
             );

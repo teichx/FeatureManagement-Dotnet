@@ -3,11 +3,11 @@
 //
 using Microsoft.Extensions.Configuration;
 
-namespace Microsoft.FeatureManagement
+namespace Microsoft.FeatureManagement.Configuration
 {
     /// <summary>
     /// An interface used by the feature management system to pre-bind feature filter parameters to a settings type.
-    /// <see cref="IFeatureFilter"/>s can implement this interface to take advantage of caching of settings by the feature management system.
+    /// <see cref="IFeatureFilter{TParams}"/>s can implement this interface to take advantage of caching of settings by the feature management system.
     /// </summary>
     public interface IFilterParametersBinder
     {

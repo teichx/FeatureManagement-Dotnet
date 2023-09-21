@@ -6,7 +6,7 @@ namespace Microsoft.FeatureManagement
     /// <summary>
     /// A context used by <see cref="IFeatureFilter{TParameters}"/> to gain insight into what feature is being evaluated and the parameters needed to check whether the feature should be enabled.
     /// </summary>
-    public class FeatureFilterEvaluationContext<TParameters> : IFeatureFilterEvaluationContext<TParameters>
+    public interface IFeatureFilterEvaluationContext<TParameters>
     {
         /// <summary>
         /// The name of the feature being evaluated.

@@ -13,11 +13,11 @@ namespace Microsoft.FeatureManagement.FeatureFilters
     /// A feature filter that can be used to activate features for targeted audiences.
     /// </summary>
     [FilterAlias(Alias)]
-    public class TargetingFilter : IFeatureFilter, IFilterParametersBinder
+    public class TargetingFilter : IFeatureFilter<TargetingFilterSettings>
     {
         private const string Alias = "Microsoft.Targeting";
         private readonly ITargetingContextAccessor _contextAccessor;
-        private readonly IContextualFeatureFilter<ITargetingContext> _contextualFilter;
+        private readonly IContextualFeatureFilter<ITargetingContext, TargetingFilterSettings> _contextualFilter;
         private readonly ILogger _logger;
 
         /// <summary>
@@ -34,22 +34,12 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         }
 
         /// <summary>
-        /// Binds configuration representing filter parameters to <see cref="TargetingFilterSettings"/>.
-        /// </summary>
-        /// <param name="filterParameters">The configuration representing filter parameters that should be bound to <see cref="TargetingFilterSettings"/>.</param>
-        /// <returns><see cref="TargetingFilterSettings"/> that can later be used in targeting.</returns>
-        public object BindParameters(IConfiguration filterParameters)
-        {
-            return filterParameters.Get<TargetingFilterSettings>() ?? new TargetingFilterSettings();
-        }
-
-        /// <summary>
         /// Performs a targeting evaluation using the current <see cref="TargetingContext"/> to determine if a feature should be enabled.
         /// </summary>
         /// <param name="context">The feature evaluation context.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null.</exception>
         /// <returns>True if the feature is enabled, false otherwise.</returns>
-        public async Task<bool> EvaluateAsync(FeatureFilterEvaluationContext context)
+        public async Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<TargetingFilterSettings> context)
         {
             if (context == null)
             {

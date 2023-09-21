@@ -17,7 +17,7 @@ namespace Microsoft.FeatureManagement
 
         /// <summary>
         /// Adds a given feature filter to the list of feature filters that will be available to enable features during runtime.
-        /// Possible feature filter metadata types include <see cref="IFeatureFilter"/> and <see cref="IContextualFeatureFilter{TContext}"/>
+        /// Possible feature filter metadata types include <see cref="IFeatureFilter{TParameters}"/> and <see cref="IContextualFeatureFilter{TContext, TParameters}"/>
         /// Only one feature filter interface can be implemented by a single type.
         /// </summary>
         /// <typeparam name="T">The feature filter type.</typeparam>

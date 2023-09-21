@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 
-namespace Microsoft.FeatureManagement
+namespace Microsoft.FeatureManagement.Configuration
 {
     /// <summary>
     /// Extensions used to add feature management functionality.
@@ -22,14 +22,10 @@ namespace Microsoft.FeatureManagement
         {
             services.AddLogging();
 
-            //
-            // Add required services
-            services.TryAddSingleton<IFeatureDefinitionProvider, ConfigurationFeatureDefinitionProvider>();
+            services.TryAddSingleton<IFeatureDefinitionProvider<IConfiguration>, ConfigurationFeatureDefinitionProvider>();
 
             services.AddSingleton<IFeatureManager, FeatureManager>();
-
             services.AddSingleton<ISessionManager, EmptySessionManager>();
-
             services.AddScoped<IFeatureManagerSnapshot, FeatureManagerSnapshot>();
 
             return new FeatureManagementBuilder(services);
@@ -48,7 +44,7 @@ namespace Microsoft.FeatureManagement
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            services.AddSingleton<IFeatureDefinitionProvider>(new ConfigurationFeatureDefinitionProvider(configuration));
+            services.AddSingleton<IFeatureDefinitionProvider<IConfiguration>>(new ConfigurationFeatureDefinitionProvider(configuration));
 
             return services.AddFeatureManagement();
         }

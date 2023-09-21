@@ -2,29 +2,28 @@
 // Licensed under the MIT license.
 //
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.FeatureManagement
 {
     /// <summary>
     /// The definition of a feature.
     /// </summary>
-    public class FeatureDefinition<TParameters> : IFeatureDefinition<TParameters>
+    public interface IFeatureDefinition<TParameters>
     {
         /// <summary>
         /// The name of the feature.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The feature filters that the feature can be enabled for.
         /// </summary>
-        public IEnumerable<FeatureFilterEnabledFor<TParameters>> EnabledFor { get; set; } = Enumerable.Empty<FeatureFilterEnabledFor<TParameters>>();
+        public IEnumerable<FeatureFilterEnabledFor<TParameters>> EnabledFor { get; }
 
         /// <summary>
         /// Determines whether any or all registered feature filters must be enabled for the feature to be considered enabled
         /// The default value is <see cref="RequirementType.Any"/>.
         /// </summary>
-        public RequirementType RequirementType { get; set; } = RequirementType.Any;
+        public RequirementType RequirementType { get; }
     }
 }

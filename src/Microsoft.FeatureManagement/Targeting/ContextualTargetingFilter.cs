@@ -17,7 +17,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
     /// A feature filter that can be used to activate features for targeted audiences.
     /// </summary>
     [FilterAlias(Alias)]
-    public class ContextualTargetingFilter : IContextualFeatureFilter<ITargetingContext>, IFilterParametersBinder
+    public class ContextualTargetingFilter : IContextualFeatureFilter<ITargetingContext, TargetingFilterSettings>
     {
         private const string Alias = "Microsoft.Targeting";
         private readonly TargetingEvaluationOptions _options;
@@ -38,23 +38,13 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         private StringComparer ComparerType => _options.IgnoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
         /// <summary>
-        /// Binds configuration representing filter parameters to <see cref="TargetingFilterSettings"/>.
-        /// </summary>
-        /// <param name="filterParameters">The configuration representing filter parameters that should be bound to <see cref="TargetingFilterSettings"/>.</param>
-        /// <returns><see cref="TargetingFilterSettings"/> that can later be used in targeting.</returns>
-        public object BindParameters(IConfiguration filterParameters)
-        {
-            return filterParameters.Get<TargetingFilterSettings>() ?? new TargetingFilterSettings();
-        }
-
-        /// <summary>
         /// Performs a targeting evaluation using the provided <see cref="TargetingContext"/> to determine if a feature should be enabled.
         /// </summary>
         /// <param name="context">The feature evaluation context.</param>
         /// <param name="targetingContext">The targeting context to use during targeting evaluation.</param>
         /// <exception cref="ArgumentNullException">Thrown if either <paramref name="context"/> or <paramref name="targetingContext"/> is null.</exception>
         /// <returns>True if the feature is enabled, false otherwise.</returns>
-        public Task<bool> EvaluateAsync(FeatureFilterEvaluationContext context, ITargetingContext targetingContext)
+        public Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<TargetingFilterSettings> context, ITargetingContext targetingContext)
         {
             if (context == null)
             {
@@ -68,7 +58,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
 
             //
             // Check if prebound settings available, otherwise bind from parameters.
-            TargetingFilterSettings settings = (TargetingFilterSettings)context.Settings ?? (TargetingFilterSettings)BindParameters(context.Parameters);
+            var settings = context.Parameters;
 
             if (!TryValidateSettings(settings, out string paramName, out string message))
             {
