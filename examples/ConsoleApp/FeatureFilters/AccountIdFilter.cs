@@ -15,9 +15,9 @@ namespace Consoto.Banking.AccountService.FeatureManagement
     /// This filter will only be executed if an object implementing <see cref="IAccountContext"/> is passed in during feature evaluation.
     /// </summary>
     [FilterAlias("AccountId")]
-    class AccountIdFilter : IContextualFeatureFilter<IAccountContext>
+    class AccountIdFilter : IContextualFeatureFilter<IAccountContext, IConfiguration>
     {
-        public Task<bool> EvaluateAsync(FeatureFilterEvaluationContext featureEvaluationContext, IAccountContext accountContext)
+        public Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<IConfiguration> featureFilterContext, IAccountContext accountContext)
         {
             if (string.IsNullOrEmpty(accountContext?.AccountId))
             {
@@ -26,7 +26,7 @@ namespace Consoto.Banking.AccountService.FeatureManagement
 
             var allowedAccounts = new List<string>();
 
-            featureEvaluationContext.Parameters.Bind("AllowedAccounts", allowedAccounts);
+            featureFilterContext.Parameters.Bind("AllowedAccounts", allowedAccounts);
 
             return Task.FromResult(allowedAccounts.Contains(accountContext.AccountId));
         }

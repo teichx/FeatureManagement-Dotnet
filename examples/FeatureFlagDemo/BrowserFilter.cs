@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace FeatureFlagDemo.FeatureManagement.FeatureFilters
 {
     [FilterAlias("Browser")]
-    public class BrowserFilter : IFeatureFilter
+    public class BrowserFilter : IFeatureFilter<IConfiguration>
     {
         private const string Chrome = "Chrome";
         private const string Edge = "Edge";
@@ -23,7 +23,7 @@ namespace FeatureFlagDemo.FeatureManagement.FeatureFilters
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public Task<bool> EvaluateAsync(FeatureFilterEvaluationContext context)
+        public Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<IConfiguration> context)
         {
             BrowserFilterSettings settings = context.Parameters.Get<BrowserFilterSettings>() ?? new BrowserFilterSettings();
 

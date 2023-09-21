@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.Configuration;
 using Microsoft.FeatureManagement.FeatureFilters;
 using System;
 using System.Collections.Generic;
@@ -178,7 +179,7 @@ namespace Tests.FeatureManagement
             IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
             ServiceCollection services = new ServiceCollection();
-            
+
             var targetingContextAccessor = new OnDemandTargetingContextAccessor();
             services.AddSingleton<ITargetingContextAccessor>(targetingContextAccessor);
 
@@ -208,7 +209,7 @@ namespace Tests.FeatureManagement
 
                 services.AddMvc(o => DisableEndpointRouting(o));
             })
-            .Configure(app => 
+            .Configure(app =>
             {
                 app.UseMvc();
             }));
@@ -589,12 +590,12 @@ namespace Tests.FeatureManagement
         [Fact]
         public async Task CustomFeatureDefinitionProvider()
         {
-            FeatureDefinition testFeature = new FeatureDefinition
+            var testFeature = new FeatureDefinition<IConfiguration>
             {
                 Name = ConditionalFeature,
-                EnabledFor = new List<FeatureFilterConfiguration>()
+                EnabledFor = new List<FeatureFilterEnabledFor<IConfiguration>>()
                 {
-                    new FeatureFilterConfiguration
+                    new FeatureFilterEnabledFor<IConfiguration>
                     {
                         Name = "Test",
                         Parameters = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
@@ -607,7 +608,7 @@ namespace Tests.FeatureManagement
 
             var services = new ServiceCollection();
 
-            services.AddSingleton<IFeatureDefinitionProvider>(new InMemoryFeatureDefinitionProvider(new FeatureDefinition[] { testFeature }))
+            services.AddSingleton<IFeatureDefinitionProvider<IConfiguration>>(new InMemoryFeatureDefinitionProvider(new FeatureDefinition<IConfiguration>[] { testFeature }))
                     .AddFeatureManagement()
                     .AddFeatureFilter<TestFilter>();
 
@@ -873,7 +874,7 @@ namespace Tests.FeatureManagement
         [Fact]
         public async Task BindsFeatureFlagSettings()
         {
-            FeatureFilterConfiguration testFilterConfiguration = new FeatureFilterConfiguration
+            var testFilterConfiguration = new FeatureFilterEnabledFor<IConfiguration>
             {
                 Name = "Test",
                 Parameters = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
@@ -885,19 +886,19 @@ namespace Tests.FeatureManagement
             var services = new ServiceCollection();
 
             var definitionProvider = new InMemoryFeatureDefinitionProvider(
-                new FeatureDefinition[]
+                new FeatureDefinition<IConfiguration>[]
                 {
-                    new FeatureDefinition
+                    new FeatureDefinition<IConfiguration>
                     {
                         Name = ConditionalFeature,
-                        EnabledFor = new List<FeatureFilterConfiguration>()
+                        EnabledFor = new List<FeatureFilterEnabledFor<IConfiguration>>()
                         {
                             testFilterConfiguration
                         }
                     }
                 });
 
-            services.AddSingleton<IFeatureDefinitionProvider>(definitionProvider)
+            services.AddSingleton<IFeatureDefinitionProvider<IConfiguration>>(definitionProvider)
                     .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
                     .AddFeatureManagement()
                     .AddFeatureFilter<TestFilter>();

@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Tests.FeatureManagement
 {
-    class TestFilter : IFeatureFilter, IFilterParametersBinder
+    class TestFilter : IFeatureFilter<IConfiguration>
     {
         public Func<IConfiguration, object> ParametersBinderCallback { get; set; }
 
-        public Func<FeatureFilterEvaluationContext, Task<bool>> Callback { get; set; }
+        public Func<IFeatureFilterEvaluationContext<IConfiguration>, Task<bool>> Callback { get; set; }
 
         public object BindParameters(IConfiguration parameters)
         {
@@ -24,7 +24,7 @@ namespace Tests.FeatureManagement
             return parameters;
         }
 
-        public Task<bool> EvaluateAsync(FeatureFilterEvaluationContext context)
+        public Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<IConfiguration> context)
         {
             return Callback?.Invoke(context) ?? Task.FromResult(false);
         }

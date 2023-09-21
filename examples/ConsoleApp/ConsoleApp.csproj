@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.FeatureManagement\Microsoft.FeatureManagement.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.FeatureManagement.Configuration\Microsoft.FeatureManagement.Configuration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@ using Consoto.Banking.AccountService.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.Configuration;
 using Microsoft.FeatureManagement.FeatureFilters;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,7 @@ namespace Consoto.Banking.HelpDesk
             // Get the feature manager from application services
             using (ServiceProvider serviceProvider = services.BuildServiceProvider())
             {
-                IFeatureManager featureManager = serviceProvider.GetRequiredService<IFeatureManager>();
+                var featureManager = serviceProvider.GetRequiredService<IFeatureManager>();
 
                 //
                 // We'll simulate a task to run on behalf of each known user
