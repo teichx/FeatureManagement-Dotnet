@@ -45,7 +45,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         {
             //
             // Check if prebound settings available, otherwise bind from parameters.
-            TimeWindowFilterSettings settings = (TimeWindowFilterSettings)context.Settings ?? (TimeWindowFilterSettings)BindParameters(context.Parameters);
+            ITimeWindowFilterSettings settings = (ITimeWindowFilterSettings)context.Settings ?? (ITimeWindowFilterSettings)BindParameters(context.Parameters);
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
 

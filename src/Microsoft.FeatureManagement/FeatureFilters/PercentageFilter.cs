@@ -45,7 +45,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         {
             //
             // Check if prebound settings available, otherwise bind from parameters.
-            PercentageFilterSettings settings = (PercentageFilterSettings)context.Settings ?? (PercentageFilterSettings)BindParameters(context.Parameters);
+            IPercentageFilterSettings settings = (IPercentageFilterSettings)context.Settings ?? (IPercentageFilterSettings)BindParameters(context.Parameters);
 
             bool result = true;
 
