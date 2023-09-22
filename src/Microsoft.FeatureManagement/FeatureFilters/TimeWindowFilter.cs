@@ -21,9 +21,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         /// </summary>
         /// <param name="loggerFactory">A logger factory for creating loggers.</param>
         public TimeWindowFilter(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<TimeWindowFilter>();
-        }
+            => _logger = loggerFactory.CreateLogger<TimeWindowFilter>();
 
         /// <summary>
         /// Evaluates whether a feature is enabled based on a configurable time window.
@@ -35,7 +33,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
             var start = context.Parameters.Start;
             var end = context.Parameters.End;
 
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+            var now = DateTimeOffset.UtcNow;
 
             if (!start.HasValue && !end.HasValue)
             {

@@ -21,9 +21,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         /// </summary>
         /// <param name="loggerFactory">A logger factory for creating loggers.</param>
         public PercentageFilter(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<PercentageFilter>();
-        }
+            => _logger = loggerFactory.CreateLogger<PercentageFilter>();
 
         /// <summary>
         /// Performs a percentage based evaluation to determine whether a feature is enabled.
@@ -33,6 +31,7 @@ namespace Microsoft.FeatureManagement.FeatureFilters
         public virtual Task<bool> EvaluateAsync(IFeatureFilterEvaluationContext<IPercentageFilterSettings> context)
         {
             var value = context.Parameters.Value;
+            if (value is null) return Task.FromResult(false);
 
             if (value < 0)
             {

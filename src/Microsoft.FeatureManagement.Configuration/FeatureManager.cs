@@ -158,7 +158,7 @@ namespace Microsoft.FeatureManagement.Configuration
                             continue;
                         }
 
-                        var context = new FeatureFilterEvaluationContext<IConfiguration>()
+                        var context = new FeatureFilterEvaluationContext<IConfiguration, IConfiguration>()
                         {
                             FeatureName = feature,
                             Parameters = featureFilterConfiguration.Parameters
@@ -308,7 +308,7 @@ namespace Microsoft.FeatureManagement.Configuration
                         //
                         // Feature filters can have namespaces in their alias
                         // If a feature is configured to use a filter without a namespace such as 'MyFilter', then it can match 'MyOrg.MyProduct.MyFilter' or simply 'MyFilter'
-                        // If a feature is configured to use a filter with a namespace such as 'MyOrg.MyProduct.MyFilter' then it can only match 'MyOrg.MyProduct.MyFilter' 
+                        // If a feature is configured to use a filter with a namespace such as 'MyOrg.MyProduct.MyFilter' then it can only match 'MyOrg.MyProduct.MyFilter'
                         if (filterName.Contains('.'))
                         {
                             //
